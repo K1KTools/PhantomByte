@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StegoWeb - Sistema Esteganográfico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { brand: '#3b82f6' } } }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-200 font-sans min-h-screen flex flex-col">
+
+    <header class="bg-slate-800 border-b border-slate-700 p-4 shadow-md text-center">
+        <h1 class="text-2xl font-bold text-white tracking-wide">
+            <span class="text-blue-500">Phantom</span>Byte
+        </h1>
+        <p class="text-slate-400 text-sm mt-1">Ocultar mensajes o archivos en texto plano</p>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-6 max-w-4xl">
+        <div class="flex space-x-1 bg-slate-800 p-1 rounded-lg mb-6 w-max mx-auto shadow-lg">
+            <button id="tab-enc-btn" onclick="switchTab('enc')" class="px-6 py-2 rounded-md font-medium transition-all bg-blue-600 text-white shadow">
+                Ocultar / Cifrar
+            </button>
+            <button id="tab-dec-btn" onclick="switchTab('dec')" class="px-6 py-2 rounded-md font-medium transition-all text-slate-300 hover:text-white hover:bg-slate-700">
+                Extraer / Descifrar
+            </button>
+        </div>
+
+        <!-- PESTAÑA: OCULTAR -->
+        <div id="tab-enc" class="space-y-6">
+            <section class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
+                <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2">1. Carga de datos</h2>
+                
+                <div class="flex space-x-6 mb-4">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="radio" name="payload_mode" value="text" checked onchange="togglePayloadMode()" class="w-4 h-4 text-blue-600 bg-slate-700 border-slate-600 focus:ring-blue-500">
+                        <span>Texto secreto</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="radio" name="payload_mode" value="file" onchange="togglePayloadMode()" class="w-4 h-4 text-blue-600 bg-slate-700 border-slate-600 focus:ring-blue-500">
+                        <span>Archivo</span>
+                    </label>
+                </div>
+
+                <div id="text-payload-container">
+                    <textarea id="txt_secret" rows="4" placeholder="Ingresar aquí el mensaje para ocultar..." class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-blue-500 resize-y"></textarea>
+                </div>
+
+                <div id="file-payload-container" class="hidden">
+                    <div class="flex items-center justify-center w-full">
+                        <label id="drop_zone" for="file_input" class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-600 border-dashed rounded-lg cursor-pointer bg-slate-900 hover:bg-slate-800 transition">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none">
+                                <svg class="w-8 h-8 mb-3 text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/></svg>
+                                <p class="mb-2 text-sm text-slate-400 font-semibold" id="file_label">Hacer clic para seleccionar o arrastrar un archivo aquí</p>
+                                <p class="text-xs text-slate-500">Formatos compatibles sin restricción</p>
+                            </div>
+                            <input id="file_input" type="file" class="hidden" onchange="handleFileSelect(event)" />
+                        </label>
+                    </div>
+                    <label class="flex items-center space-x-2 mt-3 cursor-pointer text-sm text-slate-300">
+                        <input type="checkbox" id="chk_filename" checked class="w-4 h-4 rounded text-blue-600 bg-slate-700 border-slate-600 focus:ring-blue-500">
+                        <span>Conservar nombre original del archivo</span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
+                <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2">2. Texto anfitrión (Portador)</h2>
+                <textarea id="txt_host" rows="3" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-blue-500 resize-y">Este es un texto portador de ejemplo.</textarea>
+            </section>
+
+            <section class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg flex flex-col md:flex-row gap-6">
+                <div class="flex-1">
+                    <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2">3. Base de codificación</h2>
+                    <p class="text-sm text-slate-400 mb-3" id="lbl_base_status">Base actual: 25 caracteres seleccionados.</p>
+                    <button onclick="openBaseSelector()" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 py-2 px-4 rounded font-medium border border-slate-600 transition">
+                        Configurar caracteres...
+                    </button>
+                </div>
+                
+                <div class="flex-1">
+                    <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2">4. Estrategia de inyección</h2>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="radio" name="dist_mode" value="end" class="text-blue-600 bg-slate-700 border-slate-600"> <span>Al final</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="radio" name="dist_mode" value="start" class="text-blue-600 bg-slate-700 border-slate-600"> <span>Al inicio</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="radio" name="dist_mode" value="words" class="text-blue-600 bg-slate-700 border-slate-600"> <span>Entre palabras</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="radio" name="dist_mode" value="chars" checked class="text-blue-600 bg-slate-700 border-slate-600"> <span>Entre letras</span>
+                        </label>
+                    </div>
+                    <div class="mt-3 space-y-2 text-xs text-slate-400">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="chk_use_start" class="rounded text-blue-600 bg-slate-700 border-slate-600">
+                            <span>Incluir posición al inicio (distribución)</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="chk_use_end" class="rounded text-blue-600 bg-slate-700 border-slate-600">
+                            <span>Incluir posición al final (distribución)</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <button onclick="startEncoding()" id="btn_encode" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-transform transform active:scale-[0.99] flex justify-center items-center">
+                Generar y copiar al portapapeles
+            </button>
+        </div>
+
+        <!-- PESTAÑA: EXTRAER -->
+        <div id="tab-dec" class="space-y-6 hidden">
+            <section class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                    <h2 class="text-lg font-semibold text-white">Texto contenedor</h2>
+                    <button onclick="pasteAndExtract()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded text-sm font-medium transition shadow">
+                        Pegar y procesar
+                    </button>
+                </div>
+                
+                <textarea id="txt_dec_input" rows="6" placeholder="Pegar aquí el texto que contiene información oculta..." class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-blue-500 resize-y" oninput="handleManualEdit()"></textarea>
+                
+                <div class="flex justify-end mt-4 space-x-3">
+                    <button onclick="clearDec()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded font-medium transition border border-slate-600">
+                        Limpiar
+                    </button>
+                    <button onclick="startDecoding()" id="btn_decode" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded font-medium transition shadow-lg">
+                        Extraer contenido
+                    </button>
+                </div>
+            </section>
+
+            <section class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
+                <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2">Resultado</h2>
+                <textarea id="txt_dec_res" rows="5" readonly placeholder="El contenido extraído aparecerá en este campo..." class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-400 focus:outline-none resize-y"></textarea>
+                
+                <button id="btn_save_file" onclick="saveExtractedFile()" disabled class="w-full mt-4 bg-slate-700 text-slate-400 py-3 rounded-lg font-bold transition cursor-not-allowed border border-slate-600">
+                    Descargar archivo extraído
+                </button>
+            </section>
+        </div>
+    </main>
+
+    <footer class="bg-slate-900 border-t border-slate-700 p-3 sticky bottom-0 z-10">
+        <div class="container mx-auto max-w-4xl flex items-center justify-between">
+            <span id="lbl_status" class="text-sm font-medium text-slate-400">Listo.</span>
+            <div class="w-48 bg-slate-800 rounded-full h-2.5 border border-slate-700 overflow-hidden">
+                <div id="progress_bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-200" style="width: 0%"></div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL: SELECTOR DE BASE -->
+    <div id="modal_base" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 rounded-xl border border-slate-600 shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white">Selección de caracteres</h3>
+                <button onclick="closeBaseSelector()" class="text-slate-400 hover:text-white">&times;</button>
+            </div>
+            <div class="p-4 flex-grow overflow-y-auto space-y-2" id="modal_char_list"></div>
+            <div class="p-4 border-t border-slate-700 bg-slate-900 rounded-b-xl flex justify-between items-center">
+                <div class="space-x-1">
+                    <button onclick="selectChars('safe')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">Seguros</button>
+                    <button onclick="selectChars('vs')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">+ VS</button>
+                    <button onclick="selectChars('all')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">Todos (32)</button>
+                </div>
+                <button onclick="saveBaseSelection()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-white font-medium text-sm">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MASTER_CHAR_TABLE = [
+            ['\u200B', "Zero Width Space", "Seguro"], ['\u200C', "Zero Width Non-Joiner", "Seguro"],
+            ['\u200D', "Zero Width Joiner", "Seguro"], ['\u2060', "Word Joiner", "Seguro"],
+            ['\u2061', "Invisible Function", "Seguro"], ['\u2062', "Invisible Times", "Seguro"],
+            ['\u2063', "Invisible Separator", "Seguro"], ['\u2064', "Invisible Plus", "Seguro"],
+            ['\u034F', "Combining Grapheme Joiner", "Seguro"],
+            ['\uFE00', "Variation Selector-1", "VS"], ['\uFE01', "Variation Selector-2", "VS"],
+            ['\uFE02', "Variation Selector-3", "VS"], ['\uFE03', "Variation Selector-4", "VS"],
+            ['\uFE04', "Variation Selector-5", "VS"], ['\uFE05', "Variation Selector-6", "VS"],
+            ['\uFE06', "Variation Selector-7", "VS"], ['\uFE07', "Variation Selector-8", "VS"],
+            ['\uFE08', "Variation Selector-9", "VS"], ['\uFE09', "Variation Selector-10", "VS"],
+            ['\uFE0A', "Variation Selector-11", "VS"], ['\uFE0B', "Variation Selector-12", "VS"],
+            ['\uFE0C', "Variation Selector-13", "VS"], ['\uFE0D', "Variation Selector-14", "VS"],
+            ['\uFE0E', "Variation Selector-15", "VS"], ['\uFE0F', "Variation Selector-16", "VS"],
+            ['\u200E', "Left-to-Right Mark", "Riesgo Bidi"], ['\u200F', "Right-to-Left Mark", "Riesgo Bidi"],
+            ['\u202A', "L-to-R Embedding", "Riesgo Bidi"], ['\u202B', "R-to-L Embedding", "Riesgo Bidi"],
+            ['\u202C', "Pop Directional", "Riesgo Bidi"], ['\u202D', "L-to-R Override", "Riesgo Bidi"],
+            ['\u202E', "R-to-L Override", "Riesgo Bidi"]
+        ];
+
+        const DELIM_START = '\uFEFF\u2060\uFEFF';
+        const DELIM_SEP   = '\uFEFF\u2061\uFEFF';
+        const DELIM_END   = '\uFEFF\u2062\uFEFF';
+
+        let activeCharIndices = Array.from({length: 25}, (_, i) => i);
+        let selectedFile = null;
+        let cachedPasteData = "";
+        let extractedFileBlob = null;
+        let extractedFileName = "";
+
+        const workerCode = `
+            importScripts('https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js');
+
+            const MASTER_CHAR_TABLE = ${JSON.stringify(MASTER_CHAR_TABLE)};
+            const DELIM_START = '\\uFEFF\\u2060\\uFEFF';
+            const DELIM_SEP   = '\\uFEFF\\u2061\\uFEFF';
+            const DELIM_END   = '\\uFEFF\\u2062\\uFEFF';
+
+            class FastStegoEngine {
+                static getDigitsPerChunk(base) {
+                    return Math.ceil(32 / Math.log2(base));
+                }
+
+                static encodeBlock(dataBytes, alphabet, progressCb) {
+                    const base = alphabet.length;
+                    const w = this.getDigitsPerChunk(base);
+                    const origLen = dataBytes.length;
+                    const padLen = (4 - (origLen % 4)) % 4;
+                    const padded = new Uint8Array(origLen + padLen);
+                    padded.set(dataBytes);
+                    
+                    const totalChunks = padded.length / 4;
+                    const dataView = new DataView(padded.buffer);
+                    let outChars = [];
+
+                    for (let i = 0; i < totalChunks; i++) {
+                        let val = dataView.getUint32(i * 4, false);
+                        let digits = [];
+                        for (let j = 0; j < w; j++) {
+                            digits.push(val % base);
+                            val = Math.floor(val / base);
+                        }
+                        digits.reverse();
+                        for (let d of digits) outChars.push(alphabet[d]);
+                        
+                        if (progressCb && i % 1000 === 0) progressCb((i / totalChunks) * 90);
+                    }
+                    return { encodedStr: outChars.join(''), origLen: origLen };
+                }
+
+                static decodeBlock(encodedStr, alphabet, expectedLen, progressCb) {
+                    const base = alphabet.length;
+                    const charMap = new Map();
+                    alphabet.forEach((ch, idx) => charMap.set(ch, idx));
+                    const w = this.getDigitsPerChunk(base);
+
+                    let cleanChars = [];
+                    for (const char of encodedStr) {
+                        if (charMap.has(char)) cleanChars.push(char);
+                    }
+
+                    const totalChunks = Math.floor(cleanChars.length / w);
+                    const result = new Uint8Array(totalChunks * 4);
+                    const dataView = new DataView(result.buffer);
+
+                    for (let i = 0; i < totalChunks; i++) {
+                        const chunk = cleanChars.slice(i * w, (i + 1) * w);
+                        let val = 0;
+                        for (const ch of chunk) val = val * base + charMap.get(ch);
+                        dataView.setUint32(i * 4, val, false);
+                        
+                        if (progressCb && i % 1000 === 0) progressCb((i / totalChunks) * 90);
+                    }
+                    return result.slice(0, expectedLen);
+                }
+            }
+
+            self.onmessage = function(e) {
+                const { action, payload } = e.data;
+                
+                if (action === 'encode') {
+                    try {
+                        const { isFile, fn, rawData, activeCharIndices, distMode, host, useStart, useEnd } = payload;
+                        
+                        self.postMessage({ type: 'progress', text: 'Comprimiendo datos...', percent: 10 });
+                        const compressed = pako.deflate(rawData, { level: 9 });
+                        const useComp = compressed.length < rawData.length;
+                        const finalPayload = useComp ? compressed : rawData;
+
+                        const fnBytes = new TextEncoder().encode(fn);
+                        const flags = (isFile ? 1 : 0) | (useComp ? 2 : 0);
+                        const packet = new Uint8Array(2 + fnBytes.length + finalPayload.length);
+                        packet[0] = flags;
+                        packet[1] = fnBytes.length;
+                        packet.set(fnBytes, 2);
+                        packet.set(finalPayload, 2 + fnBytes.length);
+
+                        self.postMessage({ type: 'progress', text: 'Codificando caracteres...', percent: 20 });
+                        
+                        const activeAlphabet = activeCharIndices.map(i => MASTER_CHAR_TABLE[i][0]);
+                        const { encodedStr: encodedBody, origLen: bodyLen } = FastStegoEngine.encodeBlock(
+                            packet, activeAlphabet, p => self.postMessage({ type: 'progress', text: 'Codificando cuerpo...', percent: 20 + (p * 0.5) })
+                        );
+
+                        let mask = 0 >>> 0;
+                        for (const idx of activeCharIndices) mask = (mask | (1 << idx)) >>> 0;
+
+                        const headerRaw = new Uint8Array(8);
+                        const headerView = new DataView(headerRaw.buffer);
+                        headerView.setUint32(0, mask, false);
+                        headerView.setUint32(4, bodyLen, false);
+
+                        const headerAlphabet = MASTER_CHAR_TABLE.slice(0, 16).map(x => x[0]);
+                        const encodedHdr = FastStegoEngine.encodeBlock(headerRaw, headerAlphabet).encodedStr;
+                        const invisibleHeader = DELIM_START + encodedHdr + DELIM_SEP;
+
+                        self.postMessage({ type: 'progress', text: 'Ensamblando texto...', percent: 90 });
+
+                        let resultText = "";
+                        if (distMode === "start") {
+                            resultText = invisibleHeader + encodedBody + DELIM_END + host;
+                        } else if (distMode === "end") {
+                            resultText = host + invisibleHeader + encodedBody + DELIM_END;
+                        } else if (distMode === "words" || distMode === "chars") {
+                            const items = distMode === "words" ? host.split(" ") : host.split("");
+                            const standardSlots = Math.max(0, items.length - 1);
+                            const activeSlots = standardSlots + (useStart ? 1 : 0) + (useEnd ? 1 : 0);
+                            
+                            if (activeSlots === 0) throw new Error("El texto anfitrión es insuficiente para la distribución seleccionada.");
+
+                            const baseAmt = Math.floor(encodedBody.length / activeSlots);
+                            const rem = encodedBody.length % activeSlots;
+                            let slotAmounts = Array(activeSlots).fill(baseAmt);
+                            for (let i = 0; i < rem; i++) slotAmounts[i]++;
+
+                            let chunks = [];
+                            let curr = 0;
+                            for (let amt of slotAmounts) {
+                                chunks.push(encodedBody.slice(curr, curr + amt));
+                                curr += amt;
+                            }
+
+                            chunks[0] = invisibleHeader + chunks[0];
+                            chunks[chunks.length - 1] = chunks[chunks.length - 1] + DELIM_END;
+
+                            let parts = [];
+                            let slotIdx = 0;
+                            if (useStart) parts.push(chunks[slotIdx++]);
+
+                            for (let i = 0; i < items.length; i++) {
+                                parts.push(items[i]);
+                                if (i < items.length - 1) {
+                                    parts.push(chunks[slotIdx++]);
+                                    if (distMode === "words") parts.push(" ");
+                                } else if (i === items.length - 1 && useEnd) {
+                                    parts.push(chunks[slotIdx++]);
+                                }
+                            }
+                            resultText = parts.join("");
+                        }
+                        
+                        const invisLen = invisibleHeader.length + encodedBody.length + DELIM_END.length;
+                        self.postMessage({ type: 'done', action: 'encode', resultText, invisLen });
+
+                    } catch (err) {
+                        self.postMessage({ type: 'error', error: err.message });
+                    }
+                } else if (action === 'decode') {
+                    try {
+                        const { inputText } = payload;
+                        self.postMessage({ type: 'progress', text: 'Buscando estructura de datos...', percent: 10 });
+                        
+                        const startIdx = inputText.indexOf(DELIM_START);
+                        if (startIdx === -1) throw new Error("No se encontraron delimitadores iniciales.");
+                        const endIdx = inputText.indexOf(DELIM_END, startIdx);
+                        if (endIdx === -1) throw new Error("No se encontraron delimitadores finales.");
+
+                        const block = inputText.substring(startIdx + DELIM_START.length, endIdx);
+                        const sepIdx = block.indexOf(DELIM_SEP);
+                        if (sepIdx === -1) throw new Error("Falta el separador estructural de cabecera.");
+
+                        const encodedHdr = block.substring(0, sepIdx);
+                        const encodedBody = block.substring(sepIdx + DELIM_SEP.length);
+
+                        self.postMessage({ type: 'progress', text: 'Decodificando cabecera...', percent: 30 });
+                        
+                        const headerAlphabet = MASTER_CHAR_TABLE.slice(0, 16).map(x => x[0]);
+                        const hdrBytes = FastStegoEngine.decodeBlock(encodedHdr, headerAlphabet, 8);
+                        const hdrView = new DataView(hdrBytes.buffer);
+                        const mask = hdrView.getUint32(0, false);
+                        const bodyLen = hdrView.getUint32(4, false);
+
+                        let recoveredAlphabet = [];
+                        for (let i = 0; i < MASTER_CHAR_TABLE.length; i++) {
+                            if ((mask & (1 << i)) !== 0) recoveredAlphabet.push(MASTER_CHAR_TABLE[i][0]);
+                        }
+
+                        self.postMessage({ type: 'progress', text: 'Reconstruyendo datos...', percent: 40 });
+
+                        const payloadRaw = FastStegoEngine.decodeBlock(
+                            encodedBody, recoveredAlphabet, bodyLen, p => self.postMessage({ type: 'progress', text: 'Decodificando contenido...', percent: 40 + (p * 0.4) })
+                        );
+
+                        const flags = payloadRaw[0];
+                        const fnLen = payloadRaw[1];
+                        const isFile = (flags & 1) !== 0;
+                        const isComp = (flags & 2) !== 0;
+
+                        let offset = 2;
+                        let fn = "";
+                        if (fnLen > 0) {
+                            fn = new TextDecoder().decode(payloadRaw.slice(offset, offset + fnLen));
+                            offset += fnLen;
+                        }
+
+                        let body = payloadRaw.slice(offset);
+                        if (isComp) {
+                            try {
+                                self.postMessage({ type: 'progress', text: 'Descomprimiendo...', percent: 90 });
+                                body = pako.inflate(body);
+                            } catch (e) {
+                                throw new Error("Error al descomprimir los datos. Es posible que el contenido esté dañado.");
+                            }
+                        }
+
+                        self.postMessage({ 
+                            type: 'done', action: 'decode', isFile, fn, body, baseUsed: recoveredAlphabet.length 
+                        }, [body.buffer]);
+
+                    } catch (err) {
+                        self.postMessage({ type: 'error', error: err.message });
+                    }
+                }
+            };
+        `;
+
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        const stegoWorker = new Worker(URL.createObjectURL(blob));
+
+        stegoWorker.onmessage = async function(e) {
+            const { type, action, text, percent, error, resultText, invisLen, isFile, fn, body, baseUsed } = e.data;
+            
+            if (type === 'progress') {
+                setStatus(text, percent);
+            } else if (type === 'error') {
+                setStatus("Error en el proceso.", 0);
+                alert("Error: " + error);
+                resetButtons();
+            } else if (type === 'done') {
+                if (action === 'encode') {
+                    await navigator.clipboard.writeText(resultText);
+                    setStatus("Completado y copiado.", 100);
+                    alert(`Datos generados y copiados al portapapeles.\n\n• Caracteres ocultos: ${invisLen}\n• Longitud total: ${resultText.length} caracteres.`);
+                } else if (action === 'decode') {
+                    setStatus("Extracción completada.", 100);
+                    handleDecodeSuccess(isFile, fn, body, baseUsed);
+                }
+                resetButtons();
+            }
+        };
+
+        function resetButtons() {
+            document.getElementById('btn_encode').disabled = false;
+            document.getElementById('btn_encode').classList.remove('opacity-70', 'cursor-not-allowed');
+            document.getElementById('btn_decode').disabled = false;
+        }
+
+        function setStatus(msg, progress = 0) {
+            document.getElementById('lbl_status').innerText = msg;
+            document.getElementById('progress_bar').style.width = `${progress}%`;
+        }
+
+        function switchTab(tab) {
+            document.getElementById('tab-enc').classList.toggle('hidden', tab !== 'enc');
+            document.getElementById('tab-dec').classList.toggle('hidden', tab !== 'dec');
+            document.getElementById('tab-enc-btn').className = tab === 'enc' 
+                ? 'px-6 py-2 rounded-md font-medium transition-all bg-blue-600 text-white shadow' 
+                : 'px-6 py-2 rounded-md font-medium transition-all text-slate-300 hover:text-white hover:bg-slate-700';
+            document.getElementById('tab-dec-btn').className = tab === 'dec' 
+                ? 'px-6 py-2 rounded-md font-medium transition-all bg-blue-600 text-white shadow' 
+                : 'px-6 py-2 rounded-md font-medium transition-all text-slate-300 hover:text-white hover:bg-slate-700';
+        }
+
+        function togglePayloadMode() {
+            const isFile = document.querySelector('input[name="payload_mode"]:checked').value === 'file';
+            document.getElementById('text-payload-container').classList.toggle('hidden', isFile);
+            document.getElementById('file-payload-container').classList.toggle('hidden', !isFile);
+        }
+
+        function updateFileLabel(file) {
+            if (file) {
+                const size = (file.size / 1024).toFixed(2);
+                document.getElementById('file_label').innerHTML = `<span class="text-blue-400 font-semibold">${file.name}</span> (${size} KB)`;
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                selectedFile = file;
+                updateFileLabel(file);
+            }
+        }
+
+        // CONTROL DE ARRASTRE Y SOLTADO
+        const dropZone = document.getElementById('drop_zone');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.add('border-blue-500', 'bg-slate-800');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('border-blue-500', 'bg-slate-800');
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files.length > 0) {
+                selectedFile = files[0];
+                updateFileLabel(selectedFile);
+                document.querySelector('input[name="payload_mode"][value="file"]').checked = true;
+                togglePayloadMode();
+            }
+        });
+
+        // SELECTOR DE CARACTERES
+        function openBaseSelector() {
+            const list = document.getElementById('modal_char_list');
+            list.innerHTML = '';
+            MASTER_CHAR_TABLE.forEach((item, idx) => {
+                const checked = activeCharIndices.includes(idx) ? 'checked' : '';
+                list.innerHTML += `
+                    <label class="flex items-center space-x-3 bg-slate-900 p-2 rounded cursor-pointer hover:bg-slate-800 border border-slate-700">
+                        <input type="checkbox" value="${idx}" ${checked} class="char-checkbox w-4 h-4 text-blue-600 bg-slate-700 border-slate-600 rounded">
+                        <span class="text-sm text-slate-300"><span class="text-xs bg-slate-700 px-1 rounded text-slate-400 mr-2">[${item[2]}]</span>${item[1]}</span>
+                    </label>
+                `;
+            });
+            document.getElementById('modal_base').classList.remove('hidden');
+            document.getElementById('modal_base').classList.add('flex');
+        }
+
+        function closeBaseSelector() {
+            document.getElementById('modal_base').classList.add('hidden');
+            document.getElementById('modal_base').classList.remove('flex');
+        }
+
+        function selectChars(type) {
+            const boxes = document.querySelectorAll('.char-checkbox');
+            boxes.forEach((box, idx) => {
+                const cat = MASTER_CHAR_TABLE[idx][2];
+                if (type === 'safe') box.checked = cat === 'Seguro';
+                else if (type === 'vs') box.checked = (cat === 'Seguro' || cat === 'VS');
+                else box.checked = true;
+            });
+        }
+
+        function saveBaseSelection() {
+            const boxes = document.querySelectorAll('.char-checkbox');
+            let newIndices = [];
+            boxes.forEach(box => { if(box.checked) newIndices.push(parseInt(box.value)); });
+            if (newIndices.length < 2) { alert("Debe seleccionar al menos 2 caracteres."); return; }
+            activeCharIndices = newIndices;
+            document.getElementById('lbl_base_status').innerText = `Base actual: ${newIndices.length} caracteres seleccionados.`;
+            closeBaseSelector();
+        }
+
+        // CODIFICACIÓN
+        async function startEncoding() {
+            const mode = document.querySelector('input[name="payload_mode"]:checked').value;
+            let rawData, isFile, fn = "";
+
+            if (mode === "text") {
+                const txt = document.getElementById('txt_secret').value;
+                if (!txt) return alert("Ingresar un texto secreto para continuar.");
+                rawData = new TextEncoder().encode(txt);
+                isFile = false;
+            } else {
+                if (!selectedFile) return alert("Seleccionar un archivo válido.");
+                rawData = new Uint8Array(await selectedFile.arrayBuffer());
+                isFile = true;
+                fn = document.getElementById('chk_filename').checked ? selectedFile.name : "." + selectedFile.name.split('.').pop();
+            }
+
+            const btn = document.getElementById('btn_encode');
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+
+            const payload = {
+                isFile, fn, rawData, activeCharIndices,
+                distMode: document.querySelector('input[name="dist_mode"]:checked').value,
+                host: document.getElementById('txt_host').value || " ",
+                useStart: document.getElementById('chk_use_start').checked,
+                useEnd: document.getElementById('chk_use_end').checked
+            };
+
+            stegoWorker.postMessage({ action: 'encode', payload }, [rawData.buffer]);
+        }
+
+        // DECODIFICACIÓN
+        function handleManualEdit() { cachedPasteData = ""; }
+
+        document.getElementById('txt_dec_input').addEventListener('paste', (e) => {
+            e.preventDefault();
+            const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+            cachedPasteData = text;
+            const allInvisibles = new Set([...MASTER_CHAR_TABLE.map(x=>x[0]), ...DELIM_START, ...DELIM_END, ...DELIM_SEP]);
+            let visibleChars = [];
+            for (const ch of text) { if (!allInvisibles.has(ch)) visibleChars.push(ch); }
+            e.target.value = visibleChars.join("");
+        });
+
+        async function pasteAndExtract() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (!text) throw new Error("El portapapeles se encuentra vacío.");
+                cachedPasteData = text;
+                const allInvisibles = new Set([...MASTER_CHAR_TABLE.map(x=>x[0]), ...DELIM_START, ...DELIM_END, ...DELIM_SEP]);
+                let visibleChars = [];
+                for (const ch of text) if (!allInvisibles.has(ch)) visibleChars.push(ch);
+                document.getElementById('txt_dec_input').value = visibleChars.join("");
+                startDecoding();
+            } catch (error) {
+                alert("No fue posible leer el portapapeles directamente. Pegar el texto manualmente en el campo.");
+            }
+        }
+
+        function clearDec() {
+            cachedPasteData = "";
+            extractedFileBlob = null;
+            extractedFileName = "";
+            document.getElementById('txt_dec_input').value = "";
+            document.getElementById('txt_dec_res').value = "";
+            const btn = document.getElementById('btn_save_file');
+            btn.disabled = true;
+            btn.classList.replace('bg-green-600', 'bg-slate-700');
+            btn.classList.replace('text-white', 'text-slate-400');
+            btn.classList.add('cursor-not-allowed');
+            setStatus("Listo.", 0);
+        }
+
+        function startDecoding() {
+            const inputText = cachedPasteData || document.getElementById('txt_dec_input').value;
+            if (!inputText) return alert("No se ha proporcionado texto para analizar.");
+            
+            document.getElementById('btn_decode').disabled = true;
+            stegoWorker.postMessage({ action: 'decode', payload: { inputText } });
+        }
+
+        function handleDecodeSuccess(isFile, fn, body, baseUsed) {
+            if (isFile) {
+                extractedFileBlob = new Blob([body], { type: "application/octet-stream" });
+                extractedFileName = fn || "archivo_extraido.bin";
+                if (extractedFileName.startsWith(".")) extractedFileName = "archivo_extraido" + extractedFileName;
+
+                document.getElementById('txt_dec_res').value = `ARCHIVO EXTRAÍDO CORRECTAMENTE\n\n• Nombre: ${extractedFileName}\n• Tamaño: ${body.length} bytes\n• Base detectada: ${baseUsed}`;
+                const btnSave = document.getElementById('btn_save_file');
+                btnSave.disabled = false;
+                btnSave.classList.replace('bg-slate-700', 'bg-green-600');
+                btnSave.classList.replace('text-slate-400', 'text-white');
+                btnSave.classList.remove('cursor-not-allowed');
+            } else {
+                const textRes = new TextDecoder().decode(body);
+                document.getElementById('txt_dec_res').value = `[TEXTO EXTRAÍDO | Base ${baseUsed}]:\n\n${textRes}`;
+            }
+        }
+
+        function saveExtractedFile() {
+            if (!extractedFileBlob) return;
+            const url = URL.createObjectURL(extractedFileBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = extractedFileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
