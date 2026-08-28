@@ -18,21 +18,29 @@
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-200 font-sans min-h-screen flex flex-col">
+<body class="bg-slate-900 text-slate-200 font-sans min-h-screen flex flex-col relative">
 
-    <header class="bg-slate-800 border-b border-slate-700 p-4 shadow-md text-center">
+    <header class="bg-slate-800 border-b border-slate-700 p-4 shadow-md text-center relative">
         <h1 class="text-2xl font-bold text-white tracking-wide">
             <span class="text-blue-500">Phantom</span>Byte
         </h1>
-        <p class="text-slate-400 text-sm mt-1">Ocultar mensajes o archivos en texto plano</p>
+        <p class="text-slate-400 text-sm mt-1" data-i18n="header_desc">Ocultar mensajes o archivos en texto plano</p>
+        
+        <!-- SELECTOR DE IDIOMA -->
+        <div class="absolute top-4 right-4">
+            <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-slate-900 text-slate-300 border border-slate-600 rounded p-1.5 text-sm font-medium focus:outline-none focus:border-blue-500 cursor-pointer shadow-sm">
+                <option value="es">🇪🇸 Español</option>
+                <option value="en">🇬🇧 English</option>
+            </select>
+        </div>
     </header>
 
     <main class="flex-grow container mx-auto px-4 py-6 max-w-4xl">
         <div class="flex space-x-1 bg-slate-800 p-1 rounded-lg mb-6 w-max mx-auto shadow-lg">
-            <button id="tab-enc-btn" onclick="switchTab('enc')" class="px-6 py-2 rounded-md font-medium transition-all bg-blue-600 text-white shadow">
+            <button id="tab-enc-btn" onclick="switchTab('enc')" class="px-6 py-2 rounded-md font-medium transition-all bg-blue-600 text-white shadow" data-i18n="tab_enc">
                 Ocultar / Cifrar
             </button>
-            <button id="tab-dec-btn" onclick="switchTab('dec')" class="px-6 py-2 rounded-md font-medium transition-all text-slate-300 hover:text-white hover:bg-slate-700">
+            <button id="tab-dec-btn" onclick="switchTab('dec')" class="px-6 py-2 rounded-md font-medium transition-all text-slate-300 hover:text-white hover:bg-slate-700" data-i18n="tab_dec">
                 Extraer / Descifrar
             </button>
         </div>
@@ -40,21 +48,21 @@
         <!-- PESTAÑA: OCULTAR -->
         <div id="tab-enc" class="space-y-6">
             <section class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
-                <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2">1. Carga de datos</h2>
+                <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2" data-i18n="sec1_title">1. Carga de datos</h2>
                 
                 <div class="flex space-x-6 mb-4">
                     <label class="flex items-center space-x-2 cursor-pointer">
                         <input type="radio" name="payload_mode" value="text" checked onchange="togglePayloadMode()" class="w-4 h-4 text-blue-600 bg-slate-700 border-slate-600 focus:ring-blue-500">
-                        <span>Texto secreto</span>
+                        <span data-i18n="mode_text">Texto secreto</span>
                     </label>
                     <label class="flex items-center space-x-2 cursor-pointer">
                         <input type="radio" name="payload_mode" value="file" onchange="togglePayloadMode()" class="w-4 h-4 text-blue-600 bg-slate-700 border-slate-600 focus:ring-blue-500">
-                        <span>Archivo</span>
+                        <span data-i18n="mode_file">Archivo</span>
                     </label>
                 </div>
 
                 <div id="text-payload-container">
-                    <textarea id="txt_secret" rows="4" placeholder="Ingresar aquí el mensaje para ocultar..." class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-blue-500 resize-y"></textarea>
+                    <textarea id="txt_secret" rows="4" data-i18n-ph="ph_secret" placeholder="Ingresar aquí el mensaje para ocultar..." class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-blue-500 resize-y"></textarea>
                 </div>
 
                 <div id="file-payload-container" class="hidden">
@@ -62,63 +70,74 @@
                         <label id="drop_zone" for="file_input" class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-600 border-dashed rounded-lg cursor-pointer bg-slate-900 hover:bg-slate-800 transition">
                             <div class="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none">
                                 <svg class="w-8 h-8 mb-3 text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/></svg>
-                                <p class="mb-2 text-sm text-slate-400 font-semibold" id="file_label">Hacer clic para seleccionar o arrastrar un archivo aquí</p>
-                                <p class="text-xs text-slate-500">Formatos compatibles sin restricción</p>
+                                <p class="mb-2 text-sm text-slate-400 font-semibold" id="file_label" data-i18n="drop_title">Hacer clic para seleccionar o arrastrar un archivo aquí</p>
+                                <p class="text-xs text-slate-500" data-i18n="drop_sub">Formatos compatibles sin restricción</p>
                             </div>
                             <input id="file_input" type="file" class="hidden" onchange="handleFileSelect(event)" />
                         </label>
                     </div>
                     <label class="flex items-center space-x-2 mt-3 cursor-pointer text-sm text-slate-300">
                         <input type="checkbox" id="chk_filename" checked class="w-4 h-4 rounded text-blue-600 bg-slate-700 border-slate-600 focus:ring-blue-500">
-                        <span>Conservar nombre original del archivo</span>
+                        <span data-i18n="keep_filename">Conservar nombre original del archivo</span>
                     </label>
+                </div>
+
+                <div class="mt-5 pt-4 border-t border-slate-700">
+                    <label class="flex items-center space-x-2 cursor-pointer mb-3 w-max">
+                        <input type="checkbox" id="chk_encrypt" onchange="togglePassword()" class="w-4 h-4 rounded text-blue-600 bg-slate-700 border-slate-600 focus:ring-blue-500">
+                        <span class="text-sm font-medium text-slate-300" data-i18n="chk_encrypt">Proteger con contraseña (Opcional)</span>
+                    </label>
+                    <div id="password-container" class="hidden relative">
+                        <input type="password" id="txt_password" data-i18n-ph="ph_password" placeholder="Clave de encriptación..." class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-blue-500">
+                        <p class="text-xs text-slate-500 mt-1 absolute right-2 -bottom-5" data-i18n="aes_info">AES-256-GCM (Agrega ~36 bytes)</p>
+                    </div>
                 </div>
             </section>
 
             <section class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
-                <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2">2. Texto anfitrión (Portador)</h2>
-                <textarea id="txt_host" rows="3" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-blue-500 resize-y">Este es un texto portador de ejemplo.</textarea>
+                <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2" data-i18n="sec2_title">2. Texto anfitrión (Portador)</h2>
+                <textarea id="txt_host" rows="3" data-i18n-val="val_host" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-blue-500 resize-y">Este es un texto portador de ejemplo.</textarea>
             </section>
 
             <section class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg flex flex-col md:flex-row gap-6">
                 <div class="flex-1">
-                    <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2">3. Base de codificación</h2>
-                    <p class="text-sm text-slate-400 mb-3" id="lbl_base_status">Base actual: 25 caracteres seleccionados.</p>
-                    <button onclick="openBaseSelector()" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 py-2 px-4 rounded font-medium border border-slate-600 transition">
+                    <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2" data-i18n="sec3_title">3. Base de codificación</h2>
+                    <p class="text-sm text-slate-400 mb-3" id="lbl_base_status" data-i18n-dyn="base_status">Base actual: 25 caracteres seleccionados.</p>
+                    <button onclick="openBaseSelector()" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 py-2 px-4 rounded font-medium border border-slate-600 transition" data-i18n="btn_config_chars">
                         Configurar caracteres...
                     </button>
                 </div>
                 
                 <div class="flex-1">
-                    <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2">4. Estrategia de inyección</h2>
+                    <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2" data-i18n="sec4_title">4. Estrategia de inyección</h2>
                     <div class="grid grid-cols-2 gap-3 text-sm">
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="dist_mode" value="end" class="text-blue-600 bg-slate-700 border-slate-600"> <span>Al final</span>
+                            <input type="radio" name="dist_mode" value="end" class="text-blue-600 bg-slate-700 border-slate-600"> <span data-i18n="inj_end">Al final</span>
                         </label>
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="dist_mode" value="start" class="text-blue-600 bg-slate-700 border-slate-600"> <span>Al inicio</span>
+                            <input type="radio" name="dist_mode" value="start" class="text-blue-600 bg-slate-700 border-slate-600"> <span data-i18n="inj_start">Al inicio</span>
                         </label>
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="dist_mode" value="words" class="text-blue-600 bg-slate-700 border-slate-600"> <span>Entre palabras</span>
+                            <input type="radio" name="dist_mode" value="words" class="text-blue-600 bg-slate-700 border-slate-600"> <span data-i18n="inj_words">Entre palabras</span>
                         </label>
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="dist_mode" value="chars" checked class="text-blue-600 bg-slate-700 border-slate-600"> <span>Entre letras</span>
+                            <input type="radio" name="dist_mode" value="chars" checked class="text-blue-600 bg-slate-700 border-slate-600"> <span data-i18n="inj_chars">Entre letras</span>
                         </label>
                     </div>
                     <div class="mt-3 space-y-2 text-xs text-slate-400">
                         <label class="flex items-center space-x-2 cursor-pointer">
                             <input type="checkbox" id="chk_use_start" class="rounded text-blue-600 bg-slate-700 border-slate-600">
-                            <span>Incluir posición al inicio (distribución)</span>
+                            <span data-i18n="inj_inc_start">Incluir posición al inicio (distribución)</span>
                         </label>
                         <label class="flex items-center space-x-2 cursor-pointer">
                             <input type="checkbox" id="chk_use_end" class="rounded text-blue-600 bg-slate-700 border-slate-600">
-                            <span>Incluir posición al final (distribución)</span>
+                            <span data-i18n="inj_inc_end">Incluir posición al final (distribución)</span>
                         </label>
                     </div>
                 </div>
             </section>
 
-            <button onclick="startEncoding()" id="btn_encode" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-transform transform active:scale-[0.99] flex justify-center items-center">
+            <button onclick="startEncoding()" id="btn_encode" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-transform transform active:scale-[0.99] flex justify-center items-center" data-i18n="btn_generate">
                 Generar y copiar al portapapeles
             </button>
         </div>
@@ -127,29 +146,29 @@
         <div id="tab-dec" class="space-y-6 hidden">
             <section class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
                 <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
-                    <h2 class="text-lg font-semibold text-white">Texto contenedor</h2>
-                    <button onclick="pasteAndExtract()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded text-sm font-medium transition shadow">
+                    <h2 class="text-lg font-semibold text-white" data-i18n="dec_title1">Texto contenedor</h2>
+                    <button onclick="pasteAndExtract()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded text-sm font-medium transition shadow" data-i18n="btn_paste">
                         Pegar y procesar
                     </button>
                 </div>
                 
-                <textarea id="txt_dec_input" rows="6" placeholder="Pegar aquí el texto que contiene información oculta..." class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-blue-500 resize-y" oninput="handleManualEdit()"></textarea>
+                <textarea id="txt_dec_input" rows="6" data-i18n-ph="ph_dec_input" placeholder="Pegar aquí el texto que contiene información oculta..." class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-blue-500 resize-y" oninput="handleManualEdit()"></textarea>
                 
                 <div class="flex justify-end mt-4 space-x-3">
-                    <button onclick="clearDec()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded font-medium transition border border-slate-600">
+                    <button onclick="clearDec()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded font-medium transition border border-slate-600" data-i18n="btn_clear">
                         Limpiar
                     </button>
-                    <button onclick="startDecoding()" id="btn_decode" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded font-medium transition shadow-lg">
+                    <button onclick="startDecoding()" id="btn_decode" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded font-medium transition shadow-lg" data-i18n="btn_extract">
                         Extraer contenido
                     </button>
                 </div>
             </section>
 
             <section class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
-                <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2">Resultado</h2>
-                <textarea id="txt_dec_res" rows="5" readonly placeholder="El contenido extraído aparecerá en este campo..." class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-400 focus:outline-none resize-y"></textarea>
+                <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2" data-i18n="dec_title2">Resultado</h2>
+                <textarea id="txt_dec_res" rows="5" readonly data-i18n-ph="ph_dec_res" placeholder="El contenido extraído aparecerá en este campo..." class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-400 focus:outline-none resize-y"></textarea>
                 
-                <button id="btn_save_file" onclick="saveExtractedFile()" disabled class="w-full mt-4 bg-slate-700 text-slate-400 py-3 rounded-lg font-bold transition cursor-not-allowed border border-slate-600">
+                <button id="btn_save_file" onclick="saveExtractedFile()" disabled class="w-full mt-4 bg-slate-700 text-slate-400 py-3 rounded-lg font-bold transition cursor-not-allowed border border-slate-600" data-i18n="btn_download">
                     Descargar archivo extraído
                 </button>
             </section>
@@ -158,7 +177,7 @@
 
     <footer class="bg-slate-900 border-t border-slate-700 p-3 sticky bottom-0 z-10">
         <div class="container mx-auto max-w-4xl flex items-center justify-between">
-            <span id="lbl_status" class="text-sm font-medium text-slate-400">Listo.</span>
+            <span id="lbl_status" class="text-sm font-medium text-slate-400" data-i18n="status_ready">Listo.</span>
             <div class="w-48 bg-slate-800 rounded-full h-2.5 border border-slate-700 overflow-hidden">
                 <div id="progress_bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-200" style="width: 0%"></div>
             </div>
@@ -169,40 +188,141 @@
     <div id="modal_base" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-slate-800 rounded-xl border border-slate-600 shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
             <div class="p-4 border-b border-slate-700 flex justify-between items-center">
-                <h3 class="text-lg font-bold text-white">Selección de caracteres</h3>
+                <h3 class="text-lg font-bold text-white" data-i18n="modal_char_title">Selección de caracteres</h3>
                 <button onclick="closeBaseSelector()" class="text-slate-400 hover:text-white">&times;</button>
             </div>
             <div class="p-4 flex-grow overflow-y-auto space-y-2" id="modal_char_list"></div>
             <div class="p-4 border-t border-slate-700 bg-slate-900 rounded-b-xl flex justify-between items-center">
                 <div class="space-x-1">
-                    <button onclick="selectChars('safe')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">Seguros</button>
+                    <button onclick="selectChars('safe')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded" data-i18n="btn_safe">Seguros</button>
                     <button onclick="selectChars('vs')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">+ VS</button>
-                    <button onclick="selectChars('all')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">Todos (32)</button>
+                    <button onclick="selectChars('all')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded" data-i18n="btn_all">Todos (32)</button>
                 </div>
-                <button onclick="saveBaseSelection()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-white font-medium text-sm">Aceptar</button>
+                <button onclick="saveBaseSelection()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-white font-medium text-sm" data-i18n="btn_accept">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CONTRASEÑA DE DESCIFRADO -->
+    <div id="modal_password" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 rounded-xl border border-slate-600 shadow-2xl w-full max-w-sm flex flex-col">
+            <div class="p-4 border-b border-slate-700">
+                <h3 class="text-lg font-bold text-white" data-i18n="modal_pwd_title">Contraseña requerida</h3>
+            </div>
+            <div class="p-4">
+                <p class="text-sm text-slate-400 mb-4" data-i18n="modal_pwd_desc">El contenido oculto está protegido. Ingresá la clave para desencriptarlo.</p>
+                <input type="password" id="txt_dec_password" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-blue-500" onkeydown="if(event.key === 'Enter') submitPassword()">
+            </div>
+            <div class="p-4 border-t border-slate-700 bg-slate-900 rounded-b-xl flex justify-end space-x-2">
+                <button onclick="cancelPassword()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded text-slate-300 text-sm font-medium transition" data-i18n="btn_cancel">Cancelar</button>
+                <button onclick="submitPassword()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-white text-sm font-medium transition shadow" data-i18n="btn_decrypt">Desencriptar</button>
             </div>
         </div>
     </div>
 
     <script>
+        // DICCIONARIO DE TRADUCCIONES
+        const i18n = {
+            es: {
+                header_desc: "Ocultar mensajes o archivos en texto plano",
+                tab_enc: "Ocultar / Cifrar", tab_dec: "Extraer / Descifrar",
+                sec1_title: "1. Carga de datos", mode_text: "Texto secreto", mode_file: "Archivo",
+                ph_secret: "Ingresar aquí el mensaje para ocultar...",
+                drop_title: "Hacer clic para seleccionar o arrastrar un archivo aquí", drop_sub: "Formatos compatibles sin restricción",
+                keep_filename: "Conservar nombre original del archivo",
+                chk_encrypt: "Proteger con contraseña (Opcional)", ph_password: "Clave de encriptación...", aes_info: "AES-256-GCM (Agrega ~36 bytes)",
+                sec2_title: "2. Texto anfitrión (Portador)", val_host: "Este es un texto portador de ejemplo.",
+                sec3_title: "3. Base de codificación", base_status: (n) => `Base actual: ${n} caracteres seleccionados.`, btn_config_chars: "Configurar caracteres...",
+                sec4_title: "4. Estrategia de inyección", inj_end: "Al final", inj_start: "Al inicio", inj_words: "Entre palabras", inj_chars: "Entre letras",
+                inj_inc_start: "Incluir posición al inicio (distribución)", inj_inc_end: "Incluir posición al final (distribución)",
+                btn_generate: "Generar y copiar al portapapeles",
+                dec_title1: "Texto contenedor", btn_paste: "Pegar y procesar", ph_dec_input: "Pegar aquí el texto que contiene información oculta...",
+                btn_clear: "Limpiar", btn_extract: "Extraer contenido",
+                dec_title2: "Resultado", ph_dec_res: "El contenido extraído aparecerá en este campo...", btn_download: "Descargar archivo extraído",
+                status_ready: "Listo.", modal_char_title: "Selección de caracteres", btn_safe: "Seguros", btn_all: "Todos (32)", btn_accept: "Aceptar",
+                modal_pwd_title: "Contraseña requerida", modal_pwd_desc: "El contenido oculto está protegido. Ingresá la clave para desencriptarlo.", btn_cancel: "Cancelar", btn_decrypt: "Desencriptar",
+                cat_safe: "Seguro", cat_vs: "VS", cat_bidi: "Riesgo Bidi",
+                alert_min_chars: "Debe seleccionar al menos 2 caracteres.", alert_no_secret: "Ingresar un texto secreto para continuar.", alert_no_file: "Seleccionar un archivo válido.", alert_no_pwd: "Ingresar una contraseña para proteger el contenido.",
+                alert_no_clipboard: "No fue posible leer el portapapeles directamente. Pegar el texto manualmente en el campo.", alert_no_dec_text: "No se ha proporcionado texto para analizar.", alert_pwd_invalid: "Ingresá una contraseña válida.",
+                res_file: "ARCHIVO EXTRAÍDO CORRECTAMENTE", res_name: "Nombre:", res_size: "Tamaño:", res_base: "Base detectada:", res_bytes: "bytes", res_text: "TEXTO EXTRAÍDO | Base",
+                status_cancel: "Extracción cancelada.", status_done: "Completado y copiado.", status_dec_done: "Extracción completada.", status_pwd_req: "Contraseña requerida.", status_err: "Error en el proceso.",
+                alert_done_gen: (invis, total) => `Datos generados y copiados al portapapeles.\n\n• Caracteres ocultos: ${invis}\n• Longitud total: ${total} caracteres.`
+            },
+            en: {
+                header_desc: "Hide messages or files in plain text",
+                tab_enc: "Hide / Encrypt", tab_dec: "Extract / Decrypt",
+                sec1_title: "1. Data Loading", mode_text: "Secret text", mode_file: "File",
+                ph_secret: "Enter the message to hide here...",
+                drop_title: "Click to select or drag a file here", drop_sub: "All formats supported without restriction",
+                keep_filename: "Keep original file name",
+                chk_encrypt: "Protect with password (Optional)", ph_password: "Encryption key...", aes_info: "AES-256-GCM (Adds ~36 bytes)",
+                sec2_title: "2. Host text (Carrier)", val_host: "This is a sample host text.",
+                sec3_title: "3. Encoding base", base_status: (n) => `Current base: ${n} characters selected.`, btn_config_chars: "Configure characters...",
+                sec4_title: "4. Injection strategy", inj_end: "At the end", inj_start: "At the beginning", inj_words: "Between words", inj_chars: "Between letters",
+                inj_inc_start: "Include start position (distribution)", inj_inc_end: "Include end position (distribution)",
+                btn_generate: "Generate and copy to clipboard",
+                dec_title1: "Container text", btn_paste: "Paste and process", ph_dec_input: "Paste the text containing hidden information here...",
+                btn_clear: "Clear", btn_extract: "Extract content",
+                dec_title2: "Result", ph_dec_res: "Extracted content will appear in this field...", btn_download: "Download extracted file",
+                status_ready: "Ready.", modal_char_title: "Character Selection", btn_safe: "Safe", btn_all: "All (32)", btn_accept: "Accept",
+                modal_pwd_title: "Password required", modal_pwd_desc: "The hidden content is protected. Enter the key to decrypt it.", btn_cancel: "Cancel", btn_decrypt: "Decrypt",
+                cat_safe: "Safe", cat_vs: "VS", cat_bidi: "Bidi Risk",
+                alert_min_chars: "You must select at least 2 characters.", alert_no_secret: "Enter a secret text to continue.", alert_no_file: "Select a valid file.", alert_no_pwd: "Enter a password to protect the content.",
+                alert_no_clipboard: "Could not read clipboard directly. Please paste the text manually.", alert_no_dec_text: "No text provided to analyze.", alert_pwd_invalid: "Enter a valid password.",
+                res_file: "FILE EXTRACTED SUCCESSFULLY", res_name: "Name:", res_size: "Size:", res_base: "Detected base:", res_bytes: "bytes", res_text: "EXTRACTED TEXT | Base",
+                status_cancel: "Extraction canceled.", status_done: "Completed and copied.", status_dec_done: "Extraction completed.", status_pwd_req: "Password required.", status_err: "Process error.",
+                alert_done_gen: (invis, total) => `Data generated and copied to clipboard.\n\n• Hidden characters: ${invis}\n• Total length: ${total} characters.`
+            }
+        };
+
+        let currentLang = navigator.language.startsWith('es') ? 'es' : 'en';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.documentElement.lang = lang;
+            document.getElementById('lang-selector').value = lang;
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[lang][key]) el.innerText = i18n[lang][key];
+            });
+            document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+                const key = el.getAttribute('data-i18n-ph');
+                if (i18n[lang][key]) el.placeholder = i18n[lang][key];
+            });
+            document.querySelectorAll('[data-i18n-val]').forEach(el => {
+                const key = el.getAttribute('data-i18n-val');
+                // Only overwrite if it matches the default of either lang so we don't erase user input
+                if (el.value === i18n['es'][key] || el.value === i18n['en'][key]) {
+                    el.value = i18n[lang][key];
+                }
+            });
+
+            document.getElementById('lbl_base_status').innerText = i18n[lang].base_status(activeCharIndices.length);
+            updateFileLabel(selectedFile);
+            if (document.getElementById('modal_base').classList.contains('flex')) openBaseSelector();
+        }
+
+        function t(key) { return i18n[currentLang][key]; }
+
         const MASTER_CHAR_TABLE = [
-            ['\u200B', "Zero Width Space", "Seguro"], ['\u200C', "Zero Width Non-Joiner", "Seguro"],
-            ['\u200D', "Zero Width Joiner", "Seguro"], ['\u2060', "Word Joiner", "Seguro"],
-            ['\u2061', "Invisible Function", "Seguro"], ['\u2062', "Invisible Times", "Seguro"],
-            ['\u2063', "Invisible Separator", "Seguro"], ['\u2064', "Invisible Plus", "Seguro"],
-            ['\u034F', "Combining Grapheme Joiner", "Seguro"],
-            ['\uFE00', "Variation Selector-1", "VS"], ['\uFE01', "Variation Selector-2", "VS"],
-            ['\uFE02', "Variation Selector-3", "VS"], ['\uFE03', "Variation Selector-4", "VS"],
-            ['\uFE04', "Variation Selector-5", "VS"], ['\uFE05', "Variation Selector-6", "VS"],
-            ['\uFE06', "Variation Selector-7", "VS"], ['\uFE07', "Variation Selector-8", "VS"],
-            ['\uFE08', "Variation Selector-9", "VS"], ['\uFE09', "Variation Selector-10", "VS"],
-            ['\uFE0A', "Variation Selector-11", "VS"], ['\uFE0B', "Variation Selector-12", "VS"],
-            ['\uFE0C', "Variation Selector-13", "VS"], ['\uFE0D', "Variation Selector-14", "VS"],
-            ['\uFE0E', "Variation Selector-15", "VS"], ['\uFE0F', "Variation Selector-16", "VS"],
-            ['\u200E', "Left-to-Right Mark", "Riesgo Bidi"], ['\u200F', "Right-to-Left Mark", "Riesgo Bidi"],
-            ['\u202A', "L-to-R Embedding", "Riesgo Bidi"], ['\u202B', "R-to-L Embedding", "Riesgo Bidi"],
-            ['\u202C', "Pop Directional", "Riesgo Bidi"], ['\u202D', "L-to-R Override", "Riesgo Bidi"],
-            ['\u202E', "R-to-L Override", "Riesgo Bidi"]
+            ['\u200B', "Zero Width Space", "cat_safe"], ['\u200C', "Zero Width Non-Joiner", "cat_safe"],
+            ['\u200D', "Zero Width Joiner", "cat_safe"], ['\u2060', "Word Joiner", "cat_safe"],
+            ['\u2061', "Invisible Function", "cat_safe"], ['\u2062', "Invisible Times", "cat_safe"],
+            ['\u2063', "Invisible Separator", "cat_safe"], ['\u2064', "Invisible Plus", "cat_safe"],
+            ['\u034F', "Combining Grapheme Joiner", "cat_safe"],
+            ['\uFE00', "Variation Selector-1", "cat_vs"], ['\uFE01', "Variation Selector-2", "cat_vs"],
+            ['\uFE02', "Variation Selector-3", "cat_vs"], ['\uFE03', "Variation Selector-4", "cat_vs"],
+            ['\uFE04', "Variation Selector-5", "cat_vs"], ['\uFE05', "Variation Selector-6", "cat_vs"],
+            ['\uFE06', "Variation Selector-7", "cat_vs"], ['\uFE07', "Variation Selector-8", "cat_vs"],
+            ['\uFE08', "Variation Selector-9", "cat_vs"], ['\uFE09', "Variation Selector-10", "cat_vs"],
+            ['\uFE0A', "Variation Selector-11", "cat_vs"], ['\uFE0B', "Variation Selector-12", "cat_vs"],
+            ['\uFE0C', "Variation Selector-13", "cat_vs"], ['\uFE0D', "Variation Selector-14", "cat_vs"],
+            ['\uFE0E', "Variation Selector-15", "cat_vs"], ['\uFE0F', "Variation Selector-16", "cat_vs"],
+            ['\u200E', "Left-to-Right Mark", "cat_bidi"], ['\u200F', "Right-to-Left Mark", "cat_bidi"],
+            ['\u202A', "L-to-R Embedding", "cat_bidi"], ['\u202B', "R-to-L Embedding", "cat_bidi"],
+            ['\u202C', "Pop Directional", "cat_bidi"], ['\u202D', "L-to-R Override", "cat_bidi"],
+            ['\u202E', "R-to-L Override", "cat_bidi"]
         ];
 
         const DELIM_START = '\uFEFF\u2060\uFEFF';
@@ -222,6 +342,31 @@
             const DELIM_START = '\\uFEFF\\u2060\\uFEFF';
             const DELIM_SEP   = '\\uFEFF\\u2061\\uFEFF';
             const DELIM_END   = '\\uFEFF\\u2062\\uFEFF';
+
+            const wt = {
+                es: {
+                    comp: 'Comprimiendo datos...', enc: 'Encriptando payload (AES-GCM)...', 
+                    cod_chars: 'Codificando caracteres...', cod_body: 'Codificando cuerpo...', asm: 'Ensamblando texto...',
+                    find_struct: 'Buscando estructura de datos...', dec_hdr: 'Decodificando cabecera...',
+                    rebuild: 'Reconstruyendo datos...', dec_cont: 'Decodificando contenido...',
+                    dec_aes: 'Desencriptando (AES-GCM)...', decomp: 'Descomprimiendo...',
+                    err_host: 'El texto anfitrión es insuficiente para la distribución seleccionada.',
+                    err_delim_start: 'No se encontraron delimitadores iniciales.', err_delim_end: 'No se encontraron delimitadores finales.',
+                    err_sep: 'Falta el separador estructural de cabecera.',
+                    err_pwd: 'Contraseña incorrecta o el contenido está corrupto.', err_corrupt: 'Error al descomprimir. Es posible que el contenido esté dañado.'
+                },
+                en: {
+                    comp: 'Compressing data...', enc: 'Encrypting payload (AES-GCM)...', 
+                    cod_chars: 'Encoding characters...', cod_body: 'Encoding body...', asm: 'Assembling text...',
+                    find_struct: 'Searching data structure...', dec_hdr: 'Decoding header...',
+                    rebuild: 'Rebuilding data...', dec_cont: 'Decoding content...',
+                    dec_aes: 'Decrypting (AES-GCM)...', decomp: 'Decompressing...',
+                    err_host: 'The host text is insufficient for the selected distribution.',
+                    err_delim_start: 'Initial delimiters not found.', err_delim_end: 'Final delimiters not found.',
+                    err_sep: 'Structural header separator missing.',
+                    err_pwd: 'Incorrect password or corrupted content.', err_corrupt: 'Decompression error. Content might be corrupted.'
+                }
+            };
 
             class FastStegoEngine {
                 static getDigitsPerChunk(base) {
@@ -282,31 +427,56 @@
                 }
             }
 
-            self.onmessage = function(e) {
-                const { action, payload } = e.data;
+            self.onmessage = async function(e) {
+                const { action, payload, lang } = e.data;
+                const L = wt[lang] || wt.en;
                 
                 if (action === 'encode') {
                     try {
-                        const { isFile, fn, rawData, activeCharIndices, distMode, host, useStart, useEnd } = payload;
+                        const { isFile, fn, rawData, activeCharIndices, distMode, host, useStart, useEnd, password } = payload;
                         
-                        self.postMessage({ type: 'progress', text: 'Comprimiendo datos...', percent: 10 });
+                        self.postMessage({ type: 'progress', text: L.comp, percent: 10 });
                         const compressed = pako.deflate(rawData, { level: 9 });
                         const useComp = compressed.length < rawData.length;
-                        const finalPayload = useComp ? compressed : rawData;
+                        let finalPayload = useComp ? compressed : rawData;
+                        let isEnc = false;
+
+                        if (password) {
+                            self.postMessage({ type: 'progress', text: L.enc, percent: 15 });
+                            const salt = crypto.getRandomValues(new Uint8Array(8));
+                            const iv = crypto.getRandomValues(new Uint8Array(12));
+                            const enc = new TextEncoder();
+                            
+                            const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]);
+                            const key = await crypto.subtle.deriveKey(
+                                { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+                                keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt"]
+                            );
+                            
+                            const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, finalPayload);
+                            const encBytes = new Uint8Array(encrypted);
+
+                            const securedPayload = new Uint8Array(8 + 12 + encBytes.length);
+                            securedPayload.set(salt, 0);
+                            securedPayload.set(iv, 8);
+                            securedPayload.set(encBytes, 20);
+                            finalPayload = securedPayload;
+                            isEnc = true;
+                        }
 
                         const fnBytes = new TextEncoder().encode(fn);
-                        const flags = (isFile ? 1 : 0) | (useComp ? 2 : 0);
+                        const flags = (isFile ? 1 : 0) | (useComp ? 2 : 0) | (isEnc ? 4 : 0);
                         const packet = new Uint8Array(2 + fnBytes.length + finalPayload.length);
                         packet[0] = flags;
                         packet[1] = fnBytes.length;
                         packet.set(fnBytes, 2);
                         packet.set(finalPayload, 2 + fnBytes.length);
 
-                        self.postMessage({ type: 'progress', text: 'Codificando caracteres...', percent: 20 });
+                        self.postMessage({ type: 'progress', text: L.cod_chars, percent: 20 });
                         
                         const activeAlphabet = activeCharIndices.map(i => MASTER_CHAR_TABLE[i][0]);
                         const { encodedStr: encodedBody, origLen: bodyLen } = FastStegoEngine.encodeBlock(
-                            packet, activeAlphabet, p => self.postMessage({ type: 'progress', text: 'Codificando cuerpo...', percent: 20 + (p * 0.5) })
+                            packet, activeAlphabet, p => self.postMessage({ type: 'progress', text: L.cod_body, percent: 20 + (p * 0.5) })
                         );
 
                         let mask = 0 >>> 0;
@@ -321,7 +491,7 @@
                         const encodedHdr = FastStegoEngine.encodeBlock(headerRaw, headerAlphabet).encodedStr;
                         const invisibleHeader = DELIM_START + encodedHdr + DELIM_SEP;
 
-                        self.postMessage({ type: 'progress', text: 'Ensamblando texto...', percent: 90 });
+                        self.postMessage({ type: 'progress', text: L.asm, percent: 90 });
 
                         let resultText = "";
                         if (distMode === "start") {
@@ -333,7 +503,7 @@
                             const standardSlots = Math.max(0, items.length - 1);
                             const activeSlots = standardSlots + (useStart ? 1 : 0) + (useEnd ? 1 : 0);
                             
-                            if (activeSlots === 0) throw new Error("El texto anfitrión es insuficiente para la distribución seleccionada.");
+                            if (activeSlots === 0) throw new Error(L.err_host);
 
                             const baseAmt = Math.floor(encodedBody.length / activeSlots);
                             const rem = encodedBody.length % activeSlots;
@@ -374,22 +544,22 @@
                     }
                 } else if (action === 'decode') {
                     try {
-                        const { inputText } = payload;
-                        self.postMessage({ type: 'progress', text: 'Buscando estructura de datos...', percent: 10 });
+                        const { inputText, password } = payload;
+                        self.postMessage({ type: 'progress', text: L.find_struct, percent: 10 });
                         
                         const startIdx = inputText.indexOf(DELIM_START);
-                        if (startIdx === -1) throw new Error("No se encontraron delimitadores iniciales.");
+                        if (startIdx === -1) throw new Error(L.err_delim_start);
                         const endIdx = inputText.indexOf(DELIM_END, startIdx);
-                        if (endIdx === -1) throw new Error("No se encontraron delimitadores finales.");
+                        if (endIdx === -1) throw new Error(L.err_delim_end);
 
                         const block = inputText.substring(startIdx + DELIM_START.length, endIdx);
                         const sepIdx = block.indexOf(DELIM_SEP);
-                        if (sepIdx === -1) throw new Error("Falta el separador estructural de cabecera.");
+                        if (sepIdx === -1) throw new Error(L.err_sep);
 
                         const encodedHdr = block.substring(0, sepIdx);
                         const encodedBody = block.substring(sepIdx + DELIM_SEP.length);
 
-                        self.postMessage({ type: 'progress', text: 'Decodificando cabecera...', percent: 30 });
+                        self.postMessage({ type: 'progress', text: L.dec_hdr, percent: 30 });
                         
                         const headerAlphabet = MASTER_CHAR_TABLE.slice(0, 16).map(x => x[0]);
                         const hdrBytes = FastStegoEngine.decodeBlock(encodedHdr, headerAlphabet, 8);
@@ -402,16 +572,22 @@
                             if ((mask & (1 << i)) !== 0) recoveredAlphabet.push(MASTER_CHAR_TABLE[i][0]);
                         }
 
-                        self.postMessage({ type: 'progress', text: 'Reconstruyendo datos...', percent: 40 });
+                        self.postMessage({ type: 'progress', text: L.rebuild, percent: 40 });
 
                         const payloadRaw = FastStegoEngine.decodeBlock(
-                            encodedBody, recoveredAlphabet, bodyLen, p => self.postMessage({ type: 'progress', text: 'Decodificando contenido...', percent: 40 + (p * 0.4) })
+                            encodedBody, recoveredAlphabet, bodyLen, p => self.postMessage({ type: 'progress', text: L.dec_cont, percent: 40 + (p * 0.4) })
                         );
 
                         const flags = payloadRaw[0];
                         const fnLen = payloadRaw[1];
                         const isFile = (flags & 1) !== 0;
                         const isComp = (flags & 2) !== 0;
+                        const isEnc = (flags & 4) !== 0;
+
+                        if (isEnc && !password) {
+                            self.postMessage({ type: 'needs_password' });
+                            return; 
+                        }
 
                         let offset = 2;
                         let fn = "";
@@ -421,12 +597,34 @@
                         }
 
                         let body = payloadRaw.slice(offset);
+
+                        if (isEnc) {
+                            try {
+                                self.postMessage({ type: 'progress', text: L.dec_aes, percent: 80 });
+                                const salt = body.slice(0, 8);
+                                const iv = body.slice(8, 20);
+                                const encData = body.slice(20);
+                                
+                                const enc = new TextEncoder();
+                                const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]);
+                                const key = await crypto.subtle.deriveKey(
+                                    { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+                                    keyMaterial, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
+                                );
+                                
+                                const decryptedBuffer = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, encData);
+                                body = new Uint8Array(decryptedBuffer);
+                            } catch (e) {
+                                throw new Error(L.err_pwd);
+                            }
+                        }
+
                         if (isComp) {
                             try {
-                                self.postMessage({ type: 'progress', text: 'Descomprimiendo...', percent: 90 });
+                                self.postMessage({ type: 'progress', text: L.decomp, percent: 90 });
                                 body = pako.inflate(body);
                             } catch (e) {
-                                throw new Error("Error al descomprimir los datos. Es posible que el contenido esté dañado.");
+                                throw new Error(L.err_corrupt);
                             }
                         }
 
@@ -449,17 +647,23 @@
             
             if (type === 'progress') {
                 setStatus(text, percent);
+            } else if (type === 'needs_password') {
+                setStatus(t('status_pwd_req'), 50);
+                document.getElementById('txt_dec_password').value = '';
+                document.getElementById('modal_password').classList.remove('hidden');
+                document.getElementById('modal_password').classList.add('flex');
+                document.getElementById('txt_dec_password').focus();
             } else if (type === 'error') {
-                setStatus("Error en el proceso.", 0);
+                setStatus(t('status_err'), 0);
                 alert("Error: " + error);
                 resetButtons();
             } else if (type === 'done') {
                 if (action === 'encode') {
                     await navigator.clipboard.writeText(resultText);
-                    setStatus("Completado y copiado.", 100);
-                    alert(`Datos generados y copiados al portapapeles.\n\n• Caracteres ocultos: ${invisLen}\n• Longitud total: ${resultText.length} caracteres.`);
+                    setStatus(t('status_done'), 100);
+                    alert(t('alert_done_gen')(invisLen, resultText.length));
                 } else if (action === 'decode') {
-                    setStatus("Extracción completada.", 100);
+                    setStatus(t('status_dec_done'), 100);
                     handleDecodeSuccess(isFile, fn, body, baseUsed);
                 }
                 resetButtons();
@@ -494,10 +698,16 @@
             document.getElementById('file-payload-container').classList.toggle('hidden', !isFile);
         }
 
+        function togglePassword() {
+            document.getElementById('password-container').classList.toggle('hidden', !document.getElementById('chk_encrypt').checked);
+        }
+
         function updateFileLabel(file) {
             if (file) {
                 const size = (file.size / 1024).toFixed(2);
                 document.getElementById('file_label').innerHTML = `<span class="text-blue-400 font-semibold">${file.name}</span> (${size} KB)`;
+            } else {
+                document.getElementById('file_label').innerText = t('drop_title');
             }
         }
 
@@ -511,29 +721,17 @@
 
         // CONTROL DE ARRASTRE Y SOLTADO
         const dropZone = document.getElementById('drop_zone');
-
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropZone.addEventListener(eventName, preventDefaults, false);
             document.body.addEventListener(eventName, preventDefaults, false);
         });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
+        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
         ['dragenter', 'dragover'].forEach(eventName => {
-            dropZone.addEventListener(eventName, () => {
-                dropZone.classList.add('border-blue-500', 'bg-slate-800');
-            }, false);
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('border-blue-500', 'bg-slate-800'), false);
         });
-
         ['dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, () => {
-                dropZone.classList.remove('border-blue-500', 'bg-slate-800');
-            }, false);
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('border-blue-500', 'bg-slate-800'), false);
         });
-
         dropZone.addEventListener('drop', (e) => {
             const dt = e.dataTransfer;
             const files = dt.files;
@@ -551,10 +749,11 @@
             list.innerHTML = '';
             MASTER_CHAR_TABLE.forEach((item, idx) => {
                 const checked = activeCharIndices.includes(idx) ? 'checked' : '';
+                const catLang = t(item[2]) || item[2];
                 list.innerHTML += `
                     <label class="flex items-center space-x-3 bg-slate-900 p-2 rounded cursor-pointer hover:bg-slate-800 border border-slate-700">
                         <input type="checkbox" value="${idx}" ${checked} class="char-checkbox w-4 h-4 text-blue-600 bg-slate-700 border-slate-600 rounded">
-                        <span class="text-sm text-slate-300"><span class="text-xs bg-slate-700 px-1 rounded text-slate-400 mr-2">[${item[2]}]</span>${item[1]}</span>
+                        <span class="text-sm text-slate-300"><span class="text-xs bg-slate-700 px-1 rounded text-slate-400 mr-2">[${catLang}]</span>${item[1]}</span>
                     </label>
                 `;
             });
@@ -571,8 +770,8 @@
             const boxes = document.querySelectorAll('.char-checkbox');
             boxes.forEach((box, idx) => {
                 const cat = MASTER_CHAR_TABLE[idx][2];
-                if (type === 'safe') box.checked = cat === 'Seguro';
-                else if (type === 'vs') box.checked = (cat === 'Seguro' || cat === 'VS');
+                if (type === 'safe') box.checked = cat === 'cat_safe';
+                else if (type === 'vs') box.checked = (cat === 'cat_safe' || cat === 'cat_vs');
                 else box.checked = true;
             });
         }
@@ -581,9 +780,9 @@
             const boxes = document.querySelectorAll('.char-checkbox');
             let newIndices = [];
             boxes.forEach(box => { if(box.checked) newIndices.push(parseInt(box.value)); });
-            if (newIndices.length < 2) { alert("Debe seleccionar al menos 2 caracteres."); return; }
+            if (newIndices.length < 2) { alert(t('alert_min_chars')); return; }
             activeCharIndices = newIndices;
-            document.getElementById('lbl_base_status').innerText = `Base actual: ${newIndices.length} caracteres seleccionados.`;
+            document.getElementById('lbl_base_status').innerText = t('base_status')(newIndices.length);
             closeBaseSelector();
         }
 
@@ -594,15 +793,20 @@
 
             if (mode === "text") {
                 const txt = document.getElementById('txt_secret').value;
-                if (!txt) return alert("Ingresar un texto secreto para continuar.");
+                if (!txt) return alert(t('alert_no_secret'));
                 rawData = new TextEncoder().encode(txt);
                 isFile = false;
             } else {
-                if (!selectedFile) return alert("Seleccionar un archivo válido.");
+                if (!selectedFile) return alert(t('alert_no_file'));
                 rawData = new Uint8Array(await selectedFile.arrayBuffer());
                 isFile = true;
                 fn = document.getElementById('chk_filename').checked ? selectedFile.name : "." + selectedFile.name.split('.').pop();
             }
+
+            const isEnc = document.getElementById('chk_encrypt').checked;
+            const password = isEnc ? document.getElementById('txt_password').value : null;
+
+            if (isEnc && !password) return alert(t('alert_no_pwd'));
 
             const btn = document.getElementById('btn_encode');
             btn.disabled = true;
@@ -613,10 +817,11 @@
                 distMode: document.querySelector('input[name="dist_mode"]:checked').value,
                 host: document.getElementById('txt_host').value || " ",
                 useStart: document.getElementById('chk_use_start').checked,
-                useEnd: document.getElementById('chk_use_end').checked
+                useEnd: document.getElementById('chk_use_end').checked,
+                password: password
             };
 
-            stegoWorker.postMessage({ action: 'encode', payload }, [rawData.buffer]);
+            stegoWorker.postMessage({ action: 'encode', payload, lang: currentLang }, [rawData.buffer]);
         }
 
         // DECODIFICACIÓN
@@ -635,7 +840,7 @@
         async function pasteAndExtract() {
             try {
                 const text = await navigator.clipboard.readText();
-                if (!text) throw new Error("El portapapeles se encuentra vacío.");
+                if (!text) throw new Error();
                 cachedPasteData = text;
                 const allInvisibles = new Set([...MASTER_CHAR_TABLE.map(x=>x[0]), ...DELIM_START, ...DELIM_END, ...DELIM_SEP]);
                 let visibleChars = [];
@@ -643,7 +848,7 @@
                 document.getElementById('txt_dec_input').value = visibleChars.join("");
                 startDecoding();
             } catch (error) {
-                alert("No fue posible leer el portapapeles directamente. Pegar el texto manualmente en el campo.");
+                alert(t('alert_no_clipboard'));
             }
         }
 
@@ -658,24 +863,40 @@
             btn.classList.replace('bg-green-600', 'bg-slate-700');
             btn.classList.replace('text-white', 'text-slate-400');
             btn.classList.add('cursor-not-allowed');
-            setStatus("Listo.", 0);
+            setStatus(t('status_ready'), 0);
         }
 
-        function startDecoding() {
+        function startDecoding(pwd = null) {
             const inputText = cachedPasteData || document.getElementById('txt_dec_input').value;
-            if (!inputText) return alert("No se ha proporcionado texto para analizar.");
+            if (!inputText) return alert(t('alert_no_dec_text'));
             
             document.getElementById('btn_decode').disabled = true;
-            stegoWorker.postMessage({ action: 'decode', payload: { inputText } });
+            stegoWorker.postMessage({ action: 'decode', payload: { inputText, password: pwd }, lang: currentLang });
+        }
+
+        function cancelPassword() {
+            document.getElementById('modal_password').classList.add('hidden');
+            document.getElementById('modal_password').classList.remove('flex');
+            setStatus(t('status_cancel'), 0);
+            resetButtons();
+        }
+
+        function submitPassword() {
+            const pwd = document.getElementById('txt_dec_password').value;
+            if (!pwd) return alert(t('alert_pwd_invalid'));
+            
+            document.getElementById('modal_password').classList.add('hidden');
+            document.getElementById('modal_password').classList.remove('flex');
+            startDecoding(pwd);
         }
 
         function handleDecodeSuccess(isFile, fn, body, baseUsed) {
             if (isFile) {
                 extractedFileBlob = new Blob([body], { type: "application/octet-stream" });
-                extractedFileName = fn || "archivo_extraido.bin";
-                if (extractedFileName.startsWith(".")) extractedFileName = "archivo_extraido" + extractedFileName;
+                extractedFileName = fn || (currentLang === 'es' ? "archivo_extraido.bin" : "extracted_file.bin");
+                if (extractedFileName.startsWith(".")) extractedFileName = (currentLang === 'es' ? "archivo_extraido" : "extracted_file") + extractedFileName;
 
-                document.getElementById('txt_dec_res').value = `ARCHIVO EXTRAÍDO CORRECTAMENTE\n\n• Nombre: ${extractedFileName}\n• Tamaño: ${body.length} bytes\n• Base detectada: ${baseUsed}`;
+                document.getElementById('txt_dec_res').value = `${t('res_file')}\n\n• ${t('res_name')} ${extractedFileName}\n• ${t('res_size')} ${body.length} ${t('res_bytes')}\n• ${t('res_base')} ${baseUsed}`;
                 const btnSave = document.getElementById('btn_save_file');
                 btnSave.disabled = false;
                 btnSave.classList.replace('bg-slate-700', 'bg-green-600');
@@ -683,7 +904,7 @@
                 btnSave.classList.remove('cursor-not-allowed');
             } else {
                 const textRes = new TextDecoder().decode(body);
-                document.getElementById('txt_dec_res').value = `[TEXTO EXTRAÍDO | Base ${baseUsed}]:\n\n${textRes}`;
+                document.getElementById('txt_dec_res').value = `[${t('res_text')} ${baseUsed}]:\n\n${textRes}`;
             }
         }
 
@@ -698,6 +919,11 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
+
+        // INICIALIZACIÓN
+        window.addEventListener('DOMContentLoaded', () => {
+            setLanguage(currentLang);
+        });
     </script>
 </body>
 </html>
