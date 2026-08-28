@@ -26,7 +26,6 @@
         </h1>
         <p class="text-slate-400 text-sm mt-1" data-i18n="header_desc">Ocultar mensajes o archivos en texto plano</p>
         
-        <!-- SELECTOR DE IDIOMA -->
         <div class="absolute top-4 right-4">
             <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-slate-900 text-slate-300 border border-slate-600 rounded p-1.5 text-sm font-medium focus:outline-none focus:border-blue-500 cursor-pointer shadow-sm">
                 <option value="es">🇪🇸 Español</option>
@@ -45,7 +44,6 @@
             </button>
         </div>
 
-        <!-- PESTAÑA: OCULTAR -->
         <div id="tab-enc" class="space-y-6">
             <section class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
                 <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2" data-i18n="sec1_title">1. Carga de datos</h2>
@@ -142,7 +140,6 @@
             </button>
         </div>
 
-        <!-- PESTAÑA: EXTRAER -->
         <div id="tab-dec" class="space-y-6 hidden">
             <section class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-lg">
                 <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
@@ -184,7 +181,6 @@
         </div>
     </footer>
 
-    <!-- MODAL: SELECTOR DE BASE -->
     <div id="modal_base" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-slate-800 rounded-xl border border-slate-600 shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
             <div class="p-4 border-b border-slate-700 flex justify-between items-center">
@@ -203,7 +199,6 @@
         </div>
     </div>
 
-    <!-- MODAL: CONTRASEÑA DE DESCIFRADO -->
     <div id="modal_password" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-slate-800 rounded-xl border border-slate-600 shadow-2xl w-full max-w-sm flex flex-col">
             <div class="p-4 border-b border-slate-700">
@@ -221,7 +216,6 @@
     </div>
 
     <script>
-        // DICCIONARIO DE TRADUCCIONES
         const i18n = {
             es: {
                 header_desc: "Ocultar mensajes o archivos en texto plano",
@@ -292,7 +286,6 @@
             });
             document.querySelectorAll('[data-i18n-val]').forEach(el => {
                 const key = el.getAttribute('data-i18n-val');
-                // Only overwrite if it matches the default of either lang so we don't erase user input
                 if (el.value === i18n['es'][key] || el.value === i18n['en'][key]) {
                     el.value = i18n[lang][key];
                 }
@@ -719,7 +712,6 @@
             }
         }
 
-        // CONTROL DE ARRASTRE Y SOLTADO
         const dropZone = document.getElementById('drop_zone');
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropZone.addEventListener(eventName, preventDefaults, false);
@@ -743,7 +735,6 @@
             }
         });
 
-        // SELECTOR DE CARACTERES
         function openBaseSelector() {
             const list = document.getElementById('modal_char_list');
             list.innerHTML = '';
@@ -786,7 +777,6 @@
             closeBaseSelector();
         }
 
-        // CODIFICACIÓN
         async function startEncoding() {
             const mode = document.querySelector('input[name="payload_mode"]:checked').value;
             let rawData, isFile, fn = "";
@@ -824,7 +814,6 @@
             stegoWorker.postMessage({ action: 'encode', payload, lang: currentLang }, [rawData.buffer]);
         }
 
-        // DECODIFICACIÓN
         function handleManualEdit() { cachedPasteData = ""; }
 
         document.getElementById('txt_dec_input').addEventListener('paste', (e) => {
@@ -920,7 +909,6 @@
             URL.revokeObjectURL(url);
         }
 
-        // INICIALIZACIÓN
         window.addEventListener('DOMContentLoaded', () => {
             setLanguage(currentLang);
         });
