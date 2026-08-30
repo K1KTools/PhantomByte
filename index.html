@@ -145,19 +145,23 @@
                     <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2" data-i18n="sec4_title">4. Estrategia de inyección</h2>
                     <div class="grid grid-cols-2 gap-3 text-sm">
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="dist_mode" value="end" class="text-blue-600 bg-slate-700 border-slate-600"> <span data-i18n="inj_end">Al final</span>
+                            <input type="radio" name="dist_mode" value="end" onchange="toggleDistOptions()" class="text-blue-600 bg-slate-700 border-slate-600"> <span data-i18n="inj_end">Al final</span>
                         </label>
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="dist_mode" value="start" class="text-blue-600 bg-slate-700 border-slate-600"> <span data-i18n="inj_start">Al inicio</span>
+                            <input type="radio" name="dist_mode" value="start" onchange="toggleDistOptions()" class="text-blue-600 bg-slate-700 border-slate-600"> <span data-i18n="inj_start">Al inicio</span>
                         </label>
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="dist_mode" value="words" class="text-blue-600 bg-slate-700 border-slate-600"> <span data-i18n="inj_words">Entre palabras</span>
+                            <input type="radio" name="dist_mode" value="words" onchange="toggleDistOptions()" class="text-blue-600 bg-slate-700 border-slate-600"> <span data-i18n="inj_words">Entre palabras</span>
                         </label>
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="dist_mode" value="chars" checked class="text-blue-600 bg-slate-700 border-slate-600"> <span data-i18n="inj_chars">Entre letras</span>
+                            <input type="radio" name="dist_mode" value="chars" checked onchange="toggleDistOptions()" class="text-blue-600 bg-slate-700 border-slate-600"> <span data-i18n="inj_chars">Entre letras</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer col-span-2">
+                            <input type="radio" name="dist_mode" value="custom" onchange="toggleDistOptions()" class="text-blue-600 bg-slate-700 border-slate-600"> <span data-i18n="inj_custom">Posición específica</span>
                         </label>
                     </div>
-                    <div class="mt-3 space-y-2 text-xs text-slate-400">
+                    
+                    <div id="dist-chks-container" class="mt-3 space-y-2 text-xs text-slate-400">
                         <label class="flex items-center space-x-2 cursor-pointer">
                             <input type="checkbox" id="chk_use_start" class="rounded text-blue-600 bg-slate-700 border-slate-600">
                             <span data-i18n="inj_inc_start">Incluir posición al inicio (distribución)</span>
@@ -166,6 +170,11 @@
                             <input type="checkbox" id="chk_use_end" class="rounded text-blue-600 bg-slate-700 border-slate-600">
                             <span data-i18n="inj_inc_end">Incluir posición al final (distribución)</span>
                         </label>
+                    </div>
+
+                    <div id="custom-pos-container" class="hidden mt-3 text-xs text-slate-400 flex items-center space-x-2">
+                        <span data-i18n="lbl_custom_pos" class="font-medium">Índice (0 = inicio):</span>
+                        <input type="number" id="num_custom_pos" min="0" value="0" class="w-20 bg-slate-900 border border-slate-600 rounded p-1.5 text-slate-200 focus:outline-none focus:border-blue-500">
                     </div>
                 </div>
             </section>
@@ -289,6 +298,7 @@
                 sec2_title: "2. Texto anfitrión (Portador)", val_host: "Este es un texto portador de ejemplo.",
                 sec3_title: "3. Base de codificación", base_status: (n) => `Base actual: ${n} caracteres seleccionados.`, btn_config_chars: "Configurar caracteres...",
                 sec4_title: "4. Estrategia de inyección", inj_end: "Al final", inj_start: "Al inicio", inj_words: "Entre palabras", inj_chars: "Entre letras",
+                inj_custom: "Posición específica", lbl_custom_pos: "Índice (0 = inicio):",
                 inj_inc_start: "Incluir posición al inicio (distribución)", inj_inc_end: "Incluir posición al final (distribución)",
                 btn_generate: "Generar y copiar al portapapeles",
                 dec_title1: "Texto contenedor", btn_paste: "Pegar y procesar", ph_dec_input: "Pegar aquí el texto que contiene información oculta...",
@@ -322,6 +332,7 @@
                 sec2_title: "2. Host text (Carrier)", val_host: "This is a sample host text.",
                 sec3_title: "3. Encoding base", base_status: (n) => `Current base: ${n} characters selected.`, btn_config_chars: "Configure characters...",
                 sec4_title: "4. Injection strategy", inj_end: "At the end", inj_start: "At the beginning", inj_words: "Between words", inj_chars: "Between letters",
+                inj_custom: "Specific position", lbl_custom_pos: "Index (0 = start):",
                 inj_inc_start: "Include start position (distribution)", inj_inc_end: "Include end position (distribution)",
                 btn_generate: "Generate and copy to clipboard",
                 dec_title1: "Container text", btn_paste: "Paste and process", ph_dec_input: "Paste the text containing hidden information here...",
@@ -426,6 +437,12 @@
             document.getElementById('lbl_redundancy_val').innerText = val + 'x';
             document.getElementById('warn_redundancy').classList.toggle('hidden', parseInt(val) <= 3);
             updateEstimator();
+        }
+
+        function toggleDistOptions() {
+            const mode = document.querySelector('input[name="dist_mode"]:checked').value;
+            document.getElementById('custom-pos-container').classList.toggle('hidden', mode !== 'custom');
+            document.getElementById('dist-chks-container').classList.toggle('hidden', mode !== 'words' && mode !== 'chars');
         }
 
         function updateEstimator() {
@@ -580,7 +597,7 @@
                 
                 if (action === 'encode') {
                     try {
-                        const { isFile, fn, rawData, activeCharIndices, distMode, host, useStart, useEnd, password, redundancy } = payload;
+                        const { isFile, fn, rawData, activeCharIndices, distMode, host, useStart, useEnd, password, redundancy, customPos } = payload;
                         
                         let finalPayload = rawData;
                         let useComp = false;
@@ -658,6 +675,9 @@
                             resultText = fullInvis + host;
                         } else if (distMode === "end") {
                             resultText = host + fullInvis;
+                        } else if (distMode === "custom") {
+                            let p = Math.max(0, Math.min(customPos, host.length));
+                            resultText = host.substring(0, p) + fullInvis + host.substring(p);
                         } else if (distMode === "words" || distMode === "chars") {
                             const items = distMode === "words" ? host.split(" ") : host.split("");
                             const standardSlots = Math.max(0, items.length - 1);
@@ -1013,7 +1033,8 @@
                 useStart: document.getElementById('chk_use_start').checked,
                 useEnd: document.getElementById('chk_use_end').checked,
                 password: password,
-                redundancy: redundancy
+                redundancy: redundancy,
+                customPos: parseInt(document.getElementById('num_custom_pos').value) || 0
             };
 
             stegoWorker.postMessage({ action: 'encode', payload, lang: currentLang }, [rawData.buffer]);
@@ -1136,6 +1157,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             setLanguage(currentLang);
+            toggleDistOptions();
         });
     </script>
 </body>
