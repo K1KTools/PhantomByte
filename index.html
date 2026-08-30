@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StegoWeb - Sistema Esteganográfico</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -61,6 +62,7 @@
 
                 <div id="text-payload-container">
                     <textarea id="txt_secret" rows="4" data-i18n-ph="ph_secret" placeholder="Ingresar aquí el mensaje para ocultar..." class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-blue-500 resize-y" oninput="updateEstimator()"></textarea>
+                    <p id="warn_text" class="text-xs text-rose-400 mt-2 font-medium hidden" data-i18n="warn_text_size"></p>
                 </div>
 
                 <div id="file-payload-container" class="hidden">
@@ -78,6 +80,7 @@
                         <input type="checkbox" id="chk_filename" checked onchange="updateEstimator()" class="w-4 h-4 rounded text-blue-600 bg-slate-700 border-slate-600 focus:ring-blue-500">
                         <span data-i18n="keep_filename">Conservar nombre original del archivo</span>
                     </label>
+                    <p id="warn_file" class="text-xs text-rose-400 mt-2 font-medium hidden" data-i18n="warn_file_size"></p>
                 </div>
 
                 <div class="mt-5 pt-4 border-t border-slate-700">
@@ -197,6 +200,8 @@
                 <h2 class="text-lg font-semibold text-white mb-4 border-b border-slate-700 pb-2" data-i18n="dec_title2">Resultado</h2>
                 <textarea id="txt_dec_res" rows="5" readonly data-i18n-ph="ph_dec_res" placeholder="El contenido extraído aparecerá en este campo..." class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-400 focus:outline-none resize-y"></textarea>
                 
+                <div id="preview_container" class="hidden mt-4 w-full flex justify-center bg-slate-900 border border-slate-600 rounded-lg p-2 overflow-hidden"></div>
+
                 <button id="btn_save_file" onclick="saveExtractedFile()" disabled class="w-full mt-4 bg-slate-700 text-slate-400 py-3 rounded-lg font-bold transition cursor-not-allowed border border-slate-600" data-i18n="btn_download">
                     Descargar archivo extraído
                 </button>
@@ -279,6 +284,8 @@
                 red_warn: "Valores muy altos aumentan significativamente la cantidad de caracteres.",
                 chk_encrypt: "Proteger con contraseña (Opcional)", ph_password: "Clave de encriptación...", aes_info: "AES-256-GCM (Agrega ~36 bytes)",
                 est_empty: "Estimación: 0 caracteres", est_calc: (n) => `Estimación (Max): ~${n.toLocaleString()} caracteres invisibles`,
+                warn_file_size: "⚠ Se recomiendan archivos de hasta 30 KB.",
+                warn_text_size: "⚠ El tamaño estimado supera los 50.000 caracteres.",
                 sec2_title: "2. Texto anfitrión (Portador)", val_host: "Este es un texto portador de ejemplo.",
                 sec3_title: "3. Base de codificación", base_status: (n) => `Base actual: ${n} caracteres seleccionados.`, btn_config_chars: "Configurar caracteres...",
                 sec4_title: "4. Estrategia de inyección", inj_end: "Al final", inj_start: "Al inicio", inj_words: "Entre palabras", inj_chars: "Entre letras",
@@ -310,6 +317,8 @@
                 red_warn: "Very high values significantly increase the character count.",
                 chk_encrypt: "Protect with password (Optional)", ph_password: "Encryption key...", aes_info: "AES-256-GCM (Adds ~36 bytes)",
                 est_empty: "Estimate: 0 characters", est_calc: (n) => `Estimate (Max): ~${n.toLocaleString()} invisible characters`,
+                warn_file_size: "⚠ Files up to 30 KB are recommended.",
+                warn_text_size: "⚠ Estimated size exceeds 50,000 characters.",
                 sec2_title: "2. Host text (Carrier)", val_host: "This is a sample host text.",
                 sec3_title: "3. Encoding base", base_status: (n) => `Current base: ${n} characters selected.`, btn_config_chars: "Configure characters...",
                 sec4_title: "4. Injection strategy", inj_end: "At the end", inj_start: "At the beginning", inj_words: "Between words", inj_chars: "Between letters",
@@ -424,15 +433,28 @@
             const mode = document.querySelector('input[name="payload_mode"]:checked').value;
             if (mode === 'text') {
                 const txt = document.getElementById('txt_secret').value;
-                bytes = new TextEncoder().encode(txt).length;
+                if (txt) {
+                    const rawData = new TextEncoder().encode(txt);
+                    bytes = rawData.length;
+                    try {
+                        if (window.pako) {
+                            const comp = pako.deflate(rawData, { level: 9 });
+                            if (comp.length < bytes) bytes = comp.length;
+                        }
+                    } catch (e) {}
+                }
             } else {
                 if (selectedFile) bytes = selectedFile.size;
             }
             
             if (bytes === 0) {
                 document.getElementById('lbl_estimate').innerText = t('est_empty');
+                document.getElementById('warn_file').classList.add('hidden');
+                document.getElementById('warn_text').classList.add('hidden');
                 return;
             }
+
+            document.getElementById('warn_file').classList.toggle('hidden', !(mode === 'file' && bytes > 30720));
 
             let fnLen = 0;
             if (mode === 'file' && selectedFile) {
@@ -453,6 +475,7 @@
             const totalChars = singleBlockChars * red;
 
             document.getElementById('lbl_estimate').innerText = t('est_calc')(totalChars);
+            document.getElementById('warn_text').classList.toggle('hidden', !(mode === 'text' && totalChars > 50000));
         }
 
         const workerCode = `
@@ -559,10 +582,18 @@
                     try {
                         const { isFile, fn, rawData, activeCharIndices, distMode, host, useStart, useEnd, password, redundancy } = payload;
                         
-                        self.postMessage({ type: 'progress', text: L.comp, percent: 10 });
-                        const compressed = pako.deflate(rawData, { level: 9 });
-                        const useComp = compressed.length < rawData.length;
-                        let finalPayload = useComp ? compressed : rawData;
+                        let finalPayload = rawData;
+                        let useComp = false;
+
+                        if (!isFile) {
+                            self.postMessage({ type: 'progress', text: L.comp, percent: 10 });
+                            const compressed = pako.deflate(rawData, { level: 9 });
+                            if (compressed.length < rawData.length) {
+                                finalPayload = compressed;
+                                useComp = true;
+                            }
+                        }
+
                         let isEnc = false;
 
                         if (password) {
@@ -1021,6 +1052,8 @@
             extractedFileName = "";
             document.getElementById('txt_dec_input').value = "";
             document.getElementById('txt_dec_res').value = "";
+            document.getElementById('preview_container').innerHTML = "";
+            document.getElementById('preview_container').classList.add('hidden');
             const btn = document.getElementById('btn_save_file');
             btn.disabled = true;
             btn.classList.replace('bg-green-600', 'bg-slate-700');
@@ -1034,6 +1067,8 @@
             if (!inputText) return showAlert(t('alert_no_dec_text'), t('title_notice'));
             
             document.getElementById('btn_decode').disabled = true;
+            document.getElementById('preview_container').innerHTML = "";
+            document.getElementById('preview_container').classList.add('hidden');
             stegoWorker.postMessage({ action: 'decode', payload: { inputText, password: pwd }, lang: currentLang });
         }
 
@@ -1060,6 +1095,22 @@
                 if (extractedFileName.startsWith(".")) extractedFileName = (currentLang === 'es' ? "archivo_extraido" : "extracted_file") + extractedFileName;
 
                 document.getElementById('txt_dec_res').value = `${t('res_file')}\n\n• ${t('res_name')} ${extractedFileName}\n• ${t('res_size')} ${body.length} ${t('res_bytes')}\n• ${t('res_base')} ${baseUsed}`;
+                
+                const ext = extractedFileName.split('.').pop().toLowerCase();
+                const imgExts = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg', 'avif', 'ico'];
+                const vidExts = ['mp4', 'webm', 'ogg', 'mov', 'mkv'];
+
+                if (imgExts.includes(ext) || vidExts.includes(ext)) {
+                    const url = URL.createObjectURL(extractedFileBlob);
+                    const previewContainer = document.getElementById('preview_container');
+                    if (imgExts.includes(ext)) {
+                        previewContainer.innerHTML = '<img src="' + url + '" class="max-h-64 object-contain rounded">';
+                    } else {
+                        previewContainer.innerHTML = '<video src="' + url + '" controls class="max-h-64 w-full object-contain rounded"></video>';
+                    }
+                    previewContainer.classList.remove('hidden');
+                }
+
                 const btnSave = document.getElementById('btn_save_file');
                 btnSave.disabled = false;
                 btnSave.classList.replace('bg-slate-700', 'bg-green-600');
