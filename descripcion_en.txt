@@ -1,0 +1,1 @@
+A client-side steganography tool that seamlessly embeds hidden messages or entire files into plain text using invisible characters. It features optional encryption, smart compression, customizable error-tolerance redundancy, and media previews, running completely offline inside your browser with zero server dependencies.
